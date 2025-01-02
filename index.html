@@ -3,12 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Arweave Price Data</title>
+    <title>Crypto Price Data</title>
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div class="container">
+    <div class="search-container">
+        <input type="text" id="searchInput" placeholder="Search for Arweave or Solana...">
+    </div>
+
+    <div id="arweaveContainer" class="container crypto-container" style="display: none;">
         <div class="header">
             <div class="coin-info-header">
                 <img src="https://assets.coingecko.com/coins/images/4343/small/oRt6SiEN_400x400.jpg" alt="Arweave Logo">
@@ -44,7 +48,9 @@
                 <button class="interval-btn" data-days="30">30d</button>
                 <button class="interval-btn" data-days="365">1y</button>
             </div>
-            <canvas id="priceChart"></canvas>
+            <div class="chart-wrapper">
+                <canvas id="priceChart"></canvas>
+            </div>
         </div>
 
         <div class="update-info">
@@ -52,6 +58,106 @@
             <span class="auto-update-text">(Updates every 10s)</span>
         </div>
     </div>
+
+    <div id="solanaContainer" class="container crypto-container" style="display: none;">
+        <div class="header">
+            <div class="coin-info-header">
+                <img src="https://assets.coingecko.com/coins/images/4128/small/solana.png" alt="Solana Logo">
+                <h1>Solana (SOL)</h1>
+            </div>
+        </div>
+
+        <div class="price-container">
+            <div class="main-price">
+                <div class="current-price">$<span id="solPrice">--</span></div>
+                <div class="price-change">
+                    <span id="solChange24h">--%</span>
+                </div>
+            </div>
+            <div class="price-stats">
+                <div class="stat-row">
+                    <div class="stat-item">
+                        <div class="stat-label">Market Cap</div>
+                        <div class="stat-value" id="solMarketCap">$--</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">24h Volume</div>
+                        <div class="stat-value" id="solVolume24h">$--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-controls">
+                <button class="sol-interval-btn active" data-days="1">24h</button>
+                <button class="sol-interval-btn" data-days="7">7d</button>
+                <button class="sol-interval-btn" data-days="30">30d</button>
+                <button class="sol-interval-btn" data-days="365">1y</button>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="solPriceChart"></canvas>
+            </div>
+        </div>
+
+        <div class="update-info">
+            Last Updated: <span id="solLastUpdated">Loading...</span>
+            <span class="auto-update-text">(Updates every 10s)</span>
+        </div>
+    </div>
+
+    <div id="usdtContainer" class="container crypto-container" style="display: none;">
+        <div class="header">
+            <div class="coin-info-header">
+                <img src="https://assets.coingecko.com/coins/images/325/small/Tether.png" alt="USDT Logo">
+                <h1>Tether (USDT/IDR)</h1>
+            </div>
+        </div>
+
+        <div class="price-container">
+            <div class="main-price">
+                <div class="current-price">Rp<span id="usdtPrice">--</span></div>
+                <div class="price-change">
+                    <span id="usdtChange24h">--%</span>
+                </div>
+            </div>
+            <div class="price-stats">
+                <div class="stat-row">
+                    <div class="stat-item">
+                        <div class="stat-label">Market Cap</div>
+                        <div class="stat-value" id="usdtMarketCap">Rp--</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">24h Volume</div>
+                        <div class="stat-value" id="usdtVolume24h">Rp--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-controls">
+                <button class="usdt-interval-btn active" data-days="1">24h</button>
+                <button class="usdt-interval-btn" data-days="7">7d</button>
+                <button class="usdt-interval-btn" data-days="30">30d</button>
+                <button class="usdt-interval-btn" data-days="365">1y</button>
+            </div>
+            <div class="chart-wrapper">
+                <canvas id="usdtPriceChart"></canvas>
+            </div>
+        </div>
+
+        <div class="update-info">
+            Last Updated: <span id="usdtLastUpdated">Loading...</span>
+            <span class="auto-update-text">(Updates every 10s)</span>
+        </div>
+    </div>
+
+    <div id="welcomeMessage" class="welcome-message">
+        <h2>Welcome to Crypto Price Tracker</h2>
+        <p>Search for Arweave or Solana to view their charts</p>
+    </div>
+
     <script src="script.js"></script>
 </body>
 </html>

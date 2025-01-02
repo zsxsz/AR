@@ -93,7 +93,14 @@ body {
     padding: 24px;
     margin-bottom: 24px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    height: 400px;
+    height: auto;
+    min-height: 400px;
+}
+
+.chart-wrapper {
+    width: 100%;
+    height: 350px;
+    position: relative;
 }
 
 .chart-controls {
@@ -122,6 +129,46 @@ body {
     border-color: #4f46e5;
 }
 
+.sol-interval-btn {
+    padding: 6px 12px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.sol-interval-btn:hover {
+    background: #f3f4f6;
+}
+
+.sol-interval-btn.active {
+    background: #00FFA3;
+    color: black;
+    border-color: #00FFA3;
+}
+
+.usdt-interval-btn {
+    padding: 6px 12px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s;
+}
+
+.usdt-interval-btn:hover {
+    background: #f3f4f6;
+}
+
+.usdt-interval-btn.active {
+    background: #26A17B;
+    color: white;
+    border-color: #26A17B;
+}
+
 .update-info {
     text-align: center;
     color: #6b7280;
@@ -141,6 +188,49 @@ body {
     color: #ef4444;
 }
 
+.search-container {
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 0 20px;
+}
+
+#searchInput {
+    width: 100%;
+    padding: 12px 20px;
+    font-size: 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+#searchInput:focus {
+    border-color: #4f46e5;
+}
+
+.welcome-message {
+    text-align: center;
+    padding: 40px 20px;
+    max-width: 600px;
+    margin: 40px auto;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-message h2 {
+    color: #1a1a1a;
+    margin-bottom: 12px;
+}
+
+.welcome-message p {
+    color: #6b7280;
+}
+
+.crypto-container {
+    display: none;
+}
+
 @media (max-width: 768px) {
     .container {
         padding: 12px;
@@ -156,7 +246,8 @@ body {
 
     .chart-container {
         padding: 16px;
-        height: 300px;
+        height: auto;
+        min-height: 300px;
     }
 
     .chart-controls {
