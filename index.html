@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arweave Price Data</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="coin-info-header">
+                <img src="https://assets.coingecko.com/coins/images/4343/small/oRt6SiEN_400x400.jpg" alt="Arweave Logo">
+                <h1>Arweave (AR)</h1>
+            </div>
+        </div>
+
+        <div class="price-container">
+            <div class="main-price">
+                <div class="current-price">$<span id="price">--</span></div>
+                <div class="price-change">
+                    <span id="change24h">--%</span>
+                </div>
+            </div>
+            <div class="price-stats">
+                <div class="stat-row">
+                    <div class="stat-item">
+                        <div class="stat-label">Market Cap</div>
+                        <div class="stat-value" id="marketCap">$--</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">24h Volume</div>
+                        <div class="stat-value" id="volume24h">$--</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <div class="chart-controls">
+                <button class="interval-btn active" data-days="1">24h</button>
+                <button class="interval-btn" data-days="7">7d</button>
+                <button class="interval-btn" data-days="30">30d</button>
+                <button class="interval-btn" data-days="365">1y</button>
+            </div>
+            <canvas id="priceChart"></canvas>
+        </div>
+
+        <div class="update-info">
+            Last Updated: <span id="lastUpdated">Loading...</span>
+            <span class="auto-update-text">(Updates every 10s)</span>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
