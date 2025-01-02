@@ -5,9 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Crypto Price Data</title>
     <link rel="stylesheet" href="styles.css">
-    <link rel="preload" href="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" as="script">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
-    <script src="preloaded-data.js"></script>
     <script defer src="script.js"></script>
 </head>
 <body>
@@ -49,7 +47,6 @@
                     <button class="interval-btn" data-days="365">1y</button>
                 </div>
                 <div class="chart-wrapper">
-                    <div class="loading-indicator">Loading chart data...</div>
                     <canvas id="priceChart"></canvas>
                 </div>
             </div>
@@ -97,7 +94,6 @@
                     <button class="sol-interval-btn" data-days="365">1y</button>
                 </div>
                 <div class="chart-wrapper">
-                    <div class="loading-indicator">Loading chart data...</div>
                     <canvas id="solPriceChart"></canvas>
                 </div>
             </div>
@@ -145,7 +141,6 @@
                     <button class="usdt-interval-btn" data-days="365">1y</button>
                 </div>
                 <div class="chart-wrapper">
-                    <div class="loading-indicator">Loading chart data...</div>
                     <canvas id="usdtPriceChart"></canvas>
                 </div>
             </div>
