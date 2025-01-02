@@ -4,188 +4,260 @@
     box-sizing: border-box;
 }
 
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-    background-color: #f8fafc;
-    color: #1a1a1a;
-    line-height: 1.5;
+:root {
+    --primary-color: #6366f1;
+    --primary-light: #818cf8;
+    --primary-dark: #4f46e5;
+    --background-color: #f8fafc;
+    --card-background: #ffffff;
+    --text-primary: #1e293b;
+    --text-secondary: #64748b;
+    --border-color: #e2e8f0;
+    --success-color: #10b981;
+    --error-color: #ef4444;
 }
 
-.container {
-    max-width: 1200px;
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    margin: 0;
+    padding: 20px;
+    background-color: var(--background-color);
+    min-height: 100vh;
+    color: var(--text-primary);
+}
+
+.crypto-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 24px;
+    max-width: 1600px;
     margin: 0 auto;
     padding: 20px;
 }
 
+.crypto-container {
+    background: var(--card-background);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    height: auto;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+    border: 1px solid var(--border-color);
+}
+
+.crypto-container:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
 .header {
     margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .coin-info-header {
     display: flex;
     align-items: center;
-    gap: 16px;
+    gap: 12px;
 }
 
 .coin-info-header img {
-    width: 32px;
-    height: 32px;
+    width: 40px;
+    height: 40px;
     border-radius: 50%;
+    padding: 4px;
+    background: var(--background-color);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .coin-info-header h1 {
+    margin: 0;
     font-size: 24px;
     font-weight: 600;
-    margin: 0;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
 }
 
 .price-container {
-    background: white;
-    border-radius: 12px;
-    padding: 24px;
     margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    padding: 16px;
+    background: var(--background-color);
+    border-radius: 12px;
+}
+
+.main-price {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 16px;
 }
 
 .current-price {
     font-size: 32px;
     font-weight: 700;
-    margin-bottom: 8px;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
 }
 
 .price-change {
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    font-size: 16px;
+    font-weight: 500;
+    padding: 4px 8px;
+    border-radius: 6px;
+}
+
+.positive {
+    color: var(--success-color);
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.negative {
+    color: var(--error-color);
+    background: rgba(239, 68, 68, 0.1);
 }
 
 .price-stats {
-    border-top: 1px solid #e5e7eb;
-    padding-top: 24px;
-    margin-top: 24px;
+    background: var(--card-background);
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid var(--border-color);
 }
 
 .stat-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
+    display: flex;
+    justify-content: space-between;
     gap: 24px;
 }
 
 .stat-item {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
+    flex: 1;
 }
 
 .stat-label {
-    color: #6b7280;
     font-size: 14px;
+    color: var(--text-secondary);
+    margin-bottom: 4px;
+    font-weight: 500;
 }
 
 .stat-value {
     font-size: 16px;
-    font-weight: 500;
+    font-weight: 600;
+    color: var(--text-primary);
 }
 
 .chart-container {
-    background: white;
+    background: var(--card-background);
     border-radius: 12px;
-    padding: 24px;
-    margin-bottom: 24px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-    height: auto;
-    min-height: 400px;
+    padding: 20px;
+    margin-top: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    height: 350px;
+    position: relative;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
 }
 
 .chart-wrapper {
-    width: 100%;
-    height: 350px;
     position: relative;
+    height: calc(100% - 40px);
+    width: 100%;
+}
+
+.chart-wrapper canvas {
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.chart-wrapper canvas.loaded {
+    opacity: 1;
+}
+
+.loading-indicator {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(255, 255, 255, 0.9);
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 10;
 }
 
 .chart-controls {
     display: flex;
     gap: 8px;
     margin-bottom: 20px;
+    padding: 4px;
+    background: var(--background-color);
+    border-radius: 8px;
+    width: fit-content;
 }
 
-.interval-btn {
-    padding: 6px 12px;
-    border: 1px solid #e5e7eb;
-    background: white;
+.interval-btn, .sol-interval-btn, .usdt-interval-btn {
+    background: transparent;
+    border: 1px solid var(--border-color);
+    padding: 8px 16px;
     border-radius: 6px;
     cursor: pointer;
     font-size: 14px;
-    transition: all 0.2s;
+    color: var(--text-secondary);
+    font-weight: 500;
+    transition: all 0.2s ease;
 }
 
-.interval-btn:hover {
-    background: #f3f4f6;
+.interval-btn:hover, .sol-interval-btn:hover, .usdt-interval-btn:hover {
+    background: var(--primary-light);
+    color: white;
+    border-color: var(--primary-light);
 }
 
 .interval-btn.active {
-    background: #4f46e5;
+    background: var(--primary-color);
     color: white;
-    border-color: #4f46e5;
-}
-
-.sol-interval-btn {
-    padding: 6px 12px;
-    border: 1px solid #e5e7eb;
-    background: white;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s;
-}
-
-.sol-interval-btn:hover {
-    background: #f3f4f6;
+    border-color: var(--primary-color);
 }
 
 .sol-interval-btn.active {
-    background: #00FFA3;
-    color: black;
-    border-color: #00FFA3;
-}
-
-.usdt-interval-btn {
-    padding: 6px 12px;
-    border: 1px solid #e5e7eb;
-    background: white;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 14px;
-    transition: all 0.2s;
-}
-
-.usdt-interval-btn:hover {
-    background: #f3f4f6;
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
 }
 
 .usdt-interval-btn.active {
-    background: #26A17B;
+    background: var(--primary-color);
     color: white;
-    border-color: #26A17B;
+    border-color: var(--primary-color);
 }
 
 .update-info {
-    text-align: center;
-    color: #6b7280;
+    margin-top: 16px;
     font-size: 14px;
+    color: var(--text-secondary);
+    text-align: right;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.update-info::before {
+    content: '';
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    background-color: var(--success-color);
+    border-radius: 50%;
+    margin-right: 4px;
 }
 
 .auto-update-text {
-    color: #9ca3af;
-    margin-left: 8px;
-}
-
-.positive {
-    color: #10b981;
-}
-
-.negative {
-    color: #ef4444;
+    color: var(--text-secondary);
+    opacity: 0.8;
 }
 
 .search-container {
@@ -198,14 +270,14 @@ body {
     width: 100%;
     padding: 12px 20px;
     font-size: 16px;
-    border: 2px solid #e5e7eb;
+    border: 2px solid var(--border-color);
     border-radius: 8px;
     outline: none;
     transition: border-color 0.2s;
 }
 
 #searchInput:focus {
-    border-color: #4f46e5;
+    border-color: var(--primary-color);
 }
 
 .welcome-message {
@@ -213,51 +285,60 @@ body {
     padding: 40px 20px;
     max-width: 600px;
     margin: 40px auto;
-    background: white;
+    background: var(--card-background);
     border-radius: 12px;
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .welcome-message h2 {
-    color: #1a1a1a;
+    color: var(--text-primary);
     margin-bottom: 12px;
 }
 
 .welcome-message p {
-    color: #6b7280;
-}
-
-.crypto-container {
-    display: none;
+    color: var(--text-secondary);
 }
 
 @media (max-width: 768px) {
-    .container {
+    .crypto-grid {
+        grid-template-columns: 1fr;
+        padding: 12px;
+        gap: 16px;
+    }
+    
+    body {
         padding: 12px;
     }
-
-    .price-container {
+    
+    .crypto-container {
         padding: 16px;
     }
-
-    .current-price {
-        font-size: 24px;
-    }
-
+    
     .chart-container {
+        height: 300px;
         padding: 16px;
-        height: auto;
-        min-height: 300px;
     }
-
+    
+    .price-container {
+        padding: 12px;
+    }
+    
+    .current-price {
+        font-size: 28px;
+    }
+    
+    .coin-info-header h1 {
+        font-size: 20px;
+    }
+    
     .chart-controls {
         overflow-x: auto;
-        padding-bottom: 8px;
+        padding: 4px;
+        margin-bottom: 16px;
     }
-
-    .interval-btn {
-        padding: 4px 8px;
-        font-size: 12px;
-        white-space: nowrap;
+    
+    .interval-btn, .sol-interval-btn, .usdt-interval-btn {
+        padding: 6px 12px;
+        font-size: 13px;
     }
 }

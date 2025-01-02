@@ -1,10 +1,34 @@
-let priceChart;
-let solPriceChart;
-let usdtPriceChart;
+let priceChart = null;
+let solPriceChart = null;
+let usdtPriceChart = null;
 let currentInterval = 1;
 let solCurrentInterval = 1;
 let usdtCurrentInterval = 1;
-let currentCrypto = null;
+
+// Cache DOM elements for better performance
+const priceElements = {
+    ar: {
+        price: document.getElementById('price'),
+        change: document.getElementById('change24h'),
+        marketCap: document.getElementById('marketCap'),
+        volume: document.getElementById('volume24h'),
+        lastUpdated: document.getElementById('lastUpdated')
+    },
+    sol: {
+        price: document.getElementById('solPrice'),
+        change: document.getElementById('solChange24h'),
+        marketCap: document.getElementById('solMarketCap'),
+        volume: document.getElementById('solVolume24h'),
+        lastUpdated: document.getElementById('solLastUpdated')
+    },
+    usdt: {
+        price: document.getElementById('usdtPrice'),
+        change: document.getElementById('usdtChange24h'),
+        marketCap: document.getElementById('usdtMarketCap'),
+        volume: document.getElementById('usdtVolume24h'),
+        lastUpdated: document.getElementById('usdtLastUpdated')
+    }
+};
 
 // Function to format numbers
 function formatNumber(num, decimals = 2) {
@@ -18,30 +42,148 @@ function formatNumber(num, decimals = 2) {
     return num.toFixed(decimals);
 }
 
+// Function to update UI with data
+function updateUI(data) {
+    // Update AR data
+    if (data.arweave && priceElements.ar.price) {
+        priceElements.ar.price.textContent = data.arweave.usd.toFixed(4);
+        const change = data.arweave.usd_24h_change;
+        priceElements.ar.change.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+        priceElements.ar.change.className = change >= 0 ? 'positive' : 'negative';
+        priceElements.ar.marketCap.textContent = '$' + formatNumber(data.arweave.usd_market_cap);
+        priceElements.ar.volume.textContent = '$' + formatNumber(data.arweave.usd_24h_vol);
+    }
+    
+    // Update SOL data
+    if (data.solana && priceElements.sol.price) {
+        priceElements.sol.price.textContent = data.solana.usd.toFixed(4);
+        const change = data.solana.usd_24h_change;
+        priceElements.sol.change.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+        priceElements.sol.change.className = change >= 0 ? 'positive' : 'negative';
+        priceElements.sol.marketCap.textContent = '$' + formatNumber(data.solana.usd_market_cap);
+        priceElements.sol.volume.textContent = '$' + formatNumber(data.solana.usd_24h_vol);
+    }
+    
+    // Update USDT data
+    if (data.tether && priceElements.usdt.price) {
+        priceElements.usdt.price.textContent = data.tether.idr.toLocaleString('id-ID');
+        const change = data.tether.idr_24h_change;
+        priceElements.usdt.change.textContent = `${change >= 0 ? '+' : ''}${change.toFixed(2)}%`;
+        priceElements.usdt.change.className = change >= 0 ? 'positive' : 'negative';
+        priceElements.usdt.marketCap.textContent = 'Rp' + formatNumber(data.tether.idr_market_cap);
+        priceElements.usdt.volume.textContent = 'Rp' + formatNumber(data.tether.idr_24h_vol);
+    }
+    
+    const now = new Date();
+    const timeString = now.toLocaleTimeString();
+    if (priceElements.ar.lastUpdated) priceElements.ar.lastUpdated.textContent = timeString;
+    if (priceElements.sol.lastUpdated) priceElements.sol.lastUpdated.textContent = timeString;
+    if (priceElements.usdt.lastUpdated) priceElements.usdt.lastUpdated.textContent = timeString;
+}
+
+// Proxy configuration
+const PROXY_URL = 'http://85645789-zone-custom-region-US-sessid-WcpFcA6s-sessTime-15:Nm3ft1XK@aus.360s5.com:3600';
+
+// Function to fetch data through proxy
+async function fetchWithProxy(url) {
+    try {
+        const response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Accept': 'application/json',
+            },
+            proxy: PROXY_URL
+        });
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        return await response.json();
+    } catch (error) {
+        console.error('Error fetching data:', error);
+        throw error;
+    }
+}
+
+// Function to update price data immediately
+async function updatePriceData() {
+    try {
+        const [arData, solData, usdtData] = await Promise.all([
+            fetchWithProxy('https://api.coingecko.com/api/v3/simple/price?ids=arweave&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true'),
+            fetchWithProxy('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true'),
+            fetchWithProxy('https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=idr&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true')
+        ]);
+
+        const data = {
+            arweave: arData.arweave,
+            solana: solData.solana,
+            tether: usdtData.tether
+        };
+
+        updateUI(data);
+    } catch (error) {
+        console.error('Error updating price data:', error);
+    }
+}
+
+// Function to update all chart data
+async function updateAllChartData() {
+    try {
+        await Promise.all([
+            updateChartData(),
+            updateSolChartData(),
+            updateUsdtChartData()
+        ]);
+    } catch (error) {
+        console.error('Error updating chart data:', error);
+    }
+}
+
+// Initialize all charts
+function initializeCharts() {
+    try {
+        initChart();
+        initSolChart();
+        initUsdtChart();
+    } catch (error) {
+        console.error('Error initializing charts:', error);
+    }
+}
+
 // Initialize chart
 function initChart() {
-    const ctx = document.getElementById('priceChart').getContext('2d');
+    const ctx = document.getElementById('priceChart')?.getContext('2d');
+    if (!ctx) {
+        console.error('Could not find priceChart canvas');
+        return;
+    }
+    
     if (priceChart) {
         priceChart.destroy();
     }
+
     priceChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: [],
             datasets: [{
-                label: 'Price (USD)',
+                label: 'Price',
                 data: [],
-                borderColor: '#4f46e5',
-                backgroundColor: 'rgba(79, 70, 229, 0.1)',
+                borderColor: '#6366f1',
+                backgroundColor: '#818cf8',
                 borderWidth: 2,
                 pointRadius: 0,
-                fill: true,
+                fill: false,
                 tension: 0.4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: {
+                duration: 0
+            },
             interaction: {
                 intersect: false,
                 mode: 'index'
@@ -51,61 +193,72 @@ function initChart() {
                     display: false
                 },
                 tooltip: {
+                    enabled: true,
+                    mode: 'index',
+                    intersect: false,
                     callbacks: {
                         label: function(context) {
-                            return '$' + context.parsed.y.toFixed(4);
+                            return `$${context.parsed.y.toFixed(4)}`;
                         }
                     }
                 }
             },
             scales: {
                 x: {
+                    display: true,
                     grid: {
                         display: false
                     },
                     ticks: {
-                        maxRotation: 0,
-                        maxTicksLimit: 8
+                        maxRotation: 0
                     }
                 },
                 y: {
+                    display: true,
                     position: 'right',
                     grid: {
-                        display: true
-                    },
-                    ticks: {
-                        callback: value => '$' + value.toFixed(2)
+                        color: '#e2e8f0'
                     }
                 }
             }
         }
     });
+    showChart('priceChart');
 }
 
 // Initialize Solana chart
 function initSolChart() {
-    const ctx = document.getElementById('solPriceChart').getContext('2d');
+    const ctx = document.getElementById('solPriceChart')?.getContext('2d');
+    if (!ctx) {
+        console.error('Could not find solPriceChart canvas');
+        return;
+    }
+    
     if (solPriceChart) {
         solPriceChart.destroy();
     }
+
     solPriceChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: [],
             datasets: [{
-                label: 'Price (USD)',
+                label: 'Price',
                 data: [],
-                borderColor: '#00FFA3',
-                backgroundColor: 'rgba(0, 255, 163, 0.1)',
+                borderColor: '#6366f1',
+                backgroundColor: '#818cf8',
                 borderWidth: 2,
                 pointRadius: 0,
-                fill: true,
+                fill: false,
                 tension: 0.4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: {
+                duration: 0
+            },
             interaction: {
                 intersect: false,
                 mode: 'index'
@@ -115,61 +268,72 @@ function initSolChart() {
                     display: false
                 },
                 tooltip: {
+                    enabled: true,
+                    mode: 'index',
+                    intersect: false,
                     callbacks: {
                         label: function(context) {
-                            return '$' + context.parsed.y.toFixed(4);
+                            return `$${context.parsed.y.toFixed(4)}`;
                         }
                     }
                 }
             },
             scales: {
                 x: {
+                    display: true,
                     grid: {
                         display: false
                     },
                     ticks: {
-                        maxRotation: 0,
-                        maxTicksLimit: 8
+                        maxRotation: 0
                     }
                 },
                 y: {
+                    display: true,
                     position: 'right',
                     grid: {
-                        display: true
-                    },
-                    ticks: {
-                        callback: value => '$' + value.toFixed(2)
+                        color: '#e2e8f0'
                     }
                 }
             }
         }
     });
+    showChart('solPriceChart');
 }
 
 // Initialize USDT chart
 function initUsdtChart() {
-    const ctx = document.getElementById('usdtPriceChart').getContext('2d');
+    const ctx = document.getElementById('usdtPriceChart')?.getContext('2d');
+    if (!ctx) {
+        console.error('Could not find usdtPriceChart canvas');
+        return;
+    }
+    
     if (usdtPriceChart) {
         usdtPriceChart.destroy();
     }
+
     usdtPriceChart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: [],
             datasets: [{
-                label: 'Price (IDR)',
+                label: 'Price',
                 data: [],
-                borderColor: '#26A17B',
-                backgroundColor: 'rgba(38, 161, 123, 0.1)',
+                borderColor: '#6366f1',
+                backgroundColor: '#818cf8',
                 borderWidth: 2,
                 pointRadius: 0,
-                fill: true,
+                fill: false,
                 tension: 0.4
             }]
         },
         options: {
             responsive: true,
             maintainAspectRatio: false,
+            animation: {
+                duration: 0
+            },
             interaction: {
                 intersect: false,
                 mode: 'index'
@@ -179,255 +343,233 @@ function initUsdtChart() {
                     display: false
                 },
                 tooltip: {
+                    enabled: true,
+                    mode: 'index',
+                    intersect: false,
                     callbacks: {
                         label: function(context) {
-                            return 'Rp' + context.parsed.y.toLocaleString('id-ID');
+                            return `Rp${context.parsed.y.toLocaleString('id-ID')}`;
                         }
                     }
                 }
             },
             scales: {
                 x: {
+                    display: true,
                     grid: {
                         display: false
                     },
                     ticks: {
-                        maxRotation: 0,
-                        maxTicksLimit: 8
+                        maxRotation: 0
                     }
                 },
                 y: {
+                    display: true,
                     position: 'right',
                     grid: {
-                        display: true
-                    },
-                    ticks: {
-                        callback: value => 'Rp' + value.toLocaleString('id-ID')
+                        color: '#e2e8f0'
                     }
                 }
             }
         }
     });
+    showChart('usdtPriceChart');
 }
 
-// Function to update all coin data
-async function updateAllCoinData() {
-    try {
-        const response = await fetch('https://api.coingecko.com/api/v3/simple/price?ids=arweave,solana,tether&vs_currencies=usd,idr&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true');
-        const data = await response.json();
-        
-        // Update Arweave data
-        document.getElementById('price').textContent = data.arweave.usd.toFixed(4);
-        const arweaveChange24h = data.arweave.usd_24h_change;
-        const arweaveChange24hElement = document.getElementById('change24h');
-        arweaveChange24hElement.textContent = `${arweaveChange24h >= 0 ? '+' : ''}${arweaveChange24h.toFixed(2)}%`;
-        arweaveChange24hElement.className = arweaveChange24h >= 0 ? 'positive' : 'negative';
-        document.getElementById('marketCap').textContent = '$' + formatNumber(data.arweave.usd_market_cap);
-        document.getElementById('volume24h').textContent = '$' + formatNumber(data.arweave.usd_24h_vol);
-        
-        // Update Solana data
-        document.getElementById('solPrice').textContent = data.solana.usd.toFixed(4);
-        const solChange24h = data.solana.usd_24h_change;
-        const solChange24hElement = document.getElementById('solChange24h');
-        solChange24hElement.textContent = `${solChange24h >= 0 ? '+' : ''}${solChange24h.toFixed(2)}%`;
-        solChange24hElement.className = solChange24h >= 0 ? 'positive' : 'negative';
-        document.getElementById('solMarketCap').textContent = '$' + formatNumber(data.solana.usd_market_cap);
-        document.getElementById('solVolume24h').textContent = '$' + formatNumber(data.solana.usd_24h_vol);
-        
-        // Update USDT data
-        document.getElementById('usdtPrice').textContent = data.tether.idr.toLocaleString('id-ID');
-        const usdtChange24h = data.tether.idr_24h_change;
-        const usdtChange24hElement = document.getElementById('usdtChange24h');
-        usdtChange24hElement.textContent = `${usdtChange24h >= 0 ? '+' : ''}${usdtChange24h.toFixed(2)}%`;
-        usdtChange24hElement.className = usdtChange24h >= 0 ? 'positive' : 'negative';
-        document.getElementById('usdtMarketCap').textContent = 'Rp' + formatNumber(data.tether.idr_market_cap);
-        document.getElementById('usdtVolume24h').textContent = 'Rp' + formatNumber(data.tether.idr_24h_vol);
-        
-        const now = new Date();
-        document.getElementById('lastUpdated').textContent = now.toLocaleTimeString();
-        document.getElementById('solLastUpdated').textContent = now.toLocaleTimeString();
-        document.getElementById('usdtLastUpdated').textContent = now.toLocaleTimeString();
-    } catch (error) {
-        console.error('Error fetching cryptocurrency data:', error);
+// Function to show chart after data is loaded
+function showChart(chartId) {
+    const canvas = document.getElementById(chartId);
+    if (canvas) {
+        const loadingIndicator = canvas.parentElement.querySelector('.loading-indicator');
+        if (loadingIndicator) {
+            loadingIndicator.style.display = 'none';
+        }
+        canvas.classList.add('loaded');
     }
 }
 
 // Function to update chart data
 async function updateChartData() {
     try {
-        const response = await fetch(`https://api.coingecko.com/api/v3/coins/arweave/market_chart?vs_currency=usd&days=${currentInterval}`);
-        const data = await response.json();
-        
-        const prices = data.prices;
-        const labels = prices.map(price => {
-            const date = new Date(price[0]);
-            if (currentInterval === 1) {
-                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            } else if (currentInterval <= 7) {
-                return date.toLocaleDateString([], { weekday: 'short' });
-            } else {
-                return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-            }
-        });
-        
-        priceChart.data.labels = labels;
-        priceChart.data.datasets[0].data = prices.map(price => price[1]);
-        priceChart.update();
+        const response = await fetchWithProxy(`https://api.coingecko.com/api/v3/coins/arweave/market_chart?vs_currency=usd&days=${currentInterval}`);
+        if (priceChart && response.prices) {
+            const prices = response.prices;
+            const labels = prices.map(price => {
+                const date = new Date(price[0]);
+                if (currentInterval === 1) {
+                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                } else if (currentInterval <= 7) {
+                    return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+                } else {
+                    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                }
+            });
+
+            priceChart.data.labels = labels;
+            priceChart.data.datasets[0].data = prices.map(price => price[1]);
+            priceChart.update('none');
+            showChart('priceChart');
+        }
     } catch (error) {
-        console.error('Error fetching Arweave chart data:', error);
+        console.error('Error updating AR chart data:', error);
     }
 }
 
 // Function to update Solana chart data
 async function updateSolChartData() {
     try {
-        const response = await fetch(`https://api.coingecko.com/api/v3/coins/solana/market_chart?vs_currency=usd&days=${solCurrentInterval}`);
-        const data = await response.json();
-        
-        const prices = data.prices;
-        const labels = prices.map(price => {
-            const date = new Date(price[0]);
-            if (solCurrentInterval === 1) {
-                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            } else if (solCurrentInterval <= 7) {
-                return date.toLocaleDateString([], { weekday: 'short' });
-            } else {
-                return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-            }
-        });
-        
-        solPriceChart.data.labels = labels;
-        solPriceChart.data.datasets[0].data = prices.map(price => price[1]);
-        solPriceChart.update();
+        const response = await fetchWithProxy(`https://api.coingecko.com/api/v3/coins/solana/market_chart?vs_currency=usd&days=${solCurrentInterval}`);
+        if (solPriceChart && response.prices) {
+            const prices = response.prices;
+            const labels = prices.map(price => {
+                const date = new Date(price[0]);
+                if (solCurrentInterval === 1) {
+                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                } else if (solCurrentInterval <= 7) {
+                    return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+                } else {
+                    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                }
+            });
+
+            solPriceChart.data.labels = labels;
+            solPriceChart.data.datasets[0].data = prices.map(price => price[1]);
+            solPriceChart.update('none');
+            showChart('solPriceChart');
+        }
     } catch (error) {
-        console.error('Error fetching Solana chart data:', error);
+        console.error('Error updating SOL chart data:', error);
     }
 }
 
 // Function to update USDT chart data
 async function updateUsdtChartData() {
     try {
-        const response = await fetch(`https://api.coingecko.com/api/v3/coins/tether/market_chart?vs_currency=idr&days=${usdtCurrentInterval}`);
-        const data = await response.json();
-        
-        const prices = data.prices;
-        const labels = prices.map(price => {
-            const date = new Date(price[0]);
-            if (usdtCurrentInterval === 1) {
-                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            } else if (usdtCurrentInterval <= 7) {
-                return date.toLocaleDateString([], { weekday: 'short' });
-            } else {
-                return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-            }
-        });
-        
-        usdtPriceChart.data.labels = labels;
-        usdtPriceChart.data.datasets[0].data = prices.map(price => price[1]);
-        usdtPriceChart.update();
+        const response = await fetchWithProxy(`https://api.coingecko.com/api/v3/coins/tether/market_chart?vs_currency=idr&days=${usdtCurrentInterval}`);
+        if (usdtPriceChart && response.prices) {
+            const prices = response.prices;
+            const labels = prices.map(price => {
+                const date = new Date(price[0]);
+                if (usdtCurrentInterval === 1) {
+                    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                } else if (usdtCurrentInterval <= 7) {
+                    return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+                } else {
+                    return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                }
+            });
+
+            usdtPriceChart.data.labels = labels;
+            usdtPriceChart.data.datasets[0].data = prices.map(price => price[1]);
+            usdtPriceChart.update('none');
+            showChart('usdtPriceChart');
+        }
     } catch (error) {
-        console.error('Error fetching USDT chart data:', error);
+        console.error('Error updating USDT chart data:', error);
     }
 }
 
-// Add interval button listeners
-document.querySelectorAll('.interval-btn').forEach(button => {
-    button.addEventListener('click', () => {
-        document.querySelector('.interval-btn.active').classList.remove('active');
-        button.classList.add('active');
-        currentInterval = parseInt(button.dataset.days);
-        updateChartData();
-    });
-});
+// Function to initialize data and charts
+async function initializeData() {
+    try {
+        // Fetch initial price data
+        const [arData, solData, usdtData] = await Promise.all([
+            fetchWithProxy('https://api.coingecko.com/api/v3/simple/price?ids=arweave&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true'),
+            fetchWithProxy('https://api.coingecko.com/api/v3/simple/price?ids=solana&vs_currencies=usd&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true'),
+            fetchWithProxy('https://api.coingecko.com/api/v3/simple/price?ids=tether&vs_currencies=idr&include_24hr_change=true&include_market_cap=true&include_24hr_vol=true')
+        ]);
 
-// Add Solana interval button listeners
-document.querySelectorAll('.sol-interval-btn').forEach(button => {
-    button.addEventListener('click', () => {
-        document.querySelector('.sol-interval-btn.active').classList.remove('active');
-        button.classList.add('active');
-        solCurrentInterval = parseInt(button.dataset.days);
-        updateSolChartData();
-    });
-});
+        const priceData = {
+            arweave: arData.arweave,
+            solana: solData.solana,
+            tether: usdtData.tether
+        };
 
-// Add USDT interval button listeners
-document.querySelectorAll('.usdt-interval-btn').forEach(button => {
-    button.addEventListener('click', () => {
-        document.querySelector('.usdt-interval-btn.active').classList.remove('active');
-        button.classList.add('active');
-        usdtCurrentInterval = parseInt(button.dataset.days);
-        updateUsdtChartData();
-    });
-});
+        // Update UI with initial price data
+        updateUI(priceData);
 
-// Function to handle search
-function handleSearch(searchTerm) {
-    searchTerm = searchTerm.toLowerCase().trim();
-    const arweaveContainer = document.getElementById('arweaveContainer');
-    const solanaContainer = document.getElementById('solanaContainer');
-    const usdtContainer = document.getElementById('usdtContainer');
-    const welcomeMessage = document.getElementById('welcomeMessage');
+        // Initialize and populate charts
+        initializeCharts();
 
-    // Hide all containers first
-    arweaveContainer.style.display = 'none';
-    solanaContainer.style.display = 'none';
-    usdtContainer.style.display = 'none';
-    welcomeMessage.style.display = 'none';
+        // Fetch initial chart data
+        const [arChart, solChart, usdtChart] = await Promise.all([
+            fetchWithProxy(`https://api.coingecko.com/api/v3/coins/arweave/market_chart?vs_currency=usd&days=${currentInterval}`),
+            fetchWithProxy(`https://api.coingecko.com/api/v3/coins/solana/market_chart?vs_currency=usd&days=${solCurrentInterval}`),
+            fetchWithProxy(`https://api.coingecko.com/api/v3/coins/tether/market_chart?vs_currency=idr&days=${usdtCurrentInterval}`)
+        ]);
 
-    if (searchTerm === 'arweave' || searchTerm === 'ar') {
-        arweaveContainer.style.display = 'block';
-        if (currentCrypto !== 'arweave') {
-            currentCrypto = 'arweave';
-            initChart();
-            updateChartData();
+        // Update charts with initial data
+        if (priceChart && arChart.prices) {
+            updateChartWithData(priceChart, arChart.prices, currentInterval);
         }
-    } else if (searchTerm === 'solana' || searchTerm === 'sol') {
-        solanaContainer.style.display = 'block';
-        if (currentCrypto !== 'solana') {
-            currentCrypto = 'solana';
-            initSolChart();
-            updateSolChartData();
+        if (solPriceChart && solChart.prices) {
+            updateChartWithData(solPriceChart, solChart.prices, solCurrentInterval);
         }
-    } else if (searchTerm === 'tether' || searchTerm === 'usdt') {
-        usdtContainer.style.display = 'block';
-        if (currentCrypto !== 'usdt') {
-            currentCrypto = 'usdt';
-            initUsdtChart();
-            updateUsdtChartData();
+        if (usdtPriceChart && usdtChart.prices) {
+            updateChartWithData(usdtPriceChart, usdtChart.prices, usdtCurrentInterval);
         }
-    } else if (searchTerm === '') {
-        welcomeMessage.style.display = 'block';
-        currentCrypto = null;
+
+        // Set up refresh intervals
+        setInterval(updatePriceData, 3000);
+        setInterval(updateAllChartData, 30000);
+    } catch (error) {
+        console.error('Error during initialization:', error);
     }
 }
 
-// Add search input listener
-const searchInput = document.getElementById('searchInput');
-searchInput.addEventListener('input', (e) => {
-    handleSearch(e.target.value);
-});
+// Helper function to update chart with data
+function updateChartWithData(chart, prices, interval) {
+    const labels = prices.map(price => {
+        const date = new Date(price[0]);
+        if (interval === 1) {
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        } else if (interval <= 7) {
+            return date.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' });
+        } else {
+            return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+        }
+    });
 
-// Initialize search functionality
-handleSearch('');
-
-// Auto refresh based on current crypto
-function autoRefresh() {
-    updateAllCoinData();
-    switch(currentCrypto) {
-        case 'arweave':
-            updateChartData();
-            break;
-        case 'solana':
-            updateSolChartData();
-            break;
-        case 'usdt':
-            updateUsdtChartData();
-            break;
-    }
+    chart.data.labels = labels;
+    chart.data.datasets[0].data = prices.map(price => price[1]);
+    chart.update('none');
 }
 
-// Initial data load
-updateAllCoinData();
+// Wait for DOM to be fully loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Start initialization immediately
+    initializeData();
+});
 
-// Set up auto-refresh interval
-setInterval(autoRefresh, 10000);
+// Add interval button event listeners
+document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.interval-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            const days = parseInt(button.dataset.days);
+            currentInterval = days;
+            document.querySelectorAll('.interval-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            await updateChartData();
+        });
+    });
+
+    document.querySelectorAll('.sol-interval-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            const days = parseInt(button.dataset.days);
+            solCurrentInterval = days;
+            document.querySelectorAll('.sol-interval-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            await updateSolChartData();
+        });
+    });
+
+    document.querySelectorAll('.usdt-interval-btn').forEach(button => {
+        button.addEventListener('click', async () => {
+            const days = parseInt(button.dataset.days);
+            usdtCurrentInterval = days;
+            document.querySelectorAll('.usdt-interval-btn').forEach(btn => btn.classList.remove('active'));
+            button.classList.add('active');
+            await updateUsdtChartData();
+        });
+    });
+});
